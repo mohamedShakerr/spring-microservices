@@ -1,6 +1,8 @@
 package com.microservices.currencyconversionservice.controller;
 
+import com.microservices.currencyconversionservice.connector.CurrencyExchangeServiceProxy;
 import com.microservices.currencyconversionservice.dto.CurrencyConversionBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,15 +16,24 @@ import java.util.Map;
 @RestController
 public class CurrencyConversionController {
 
+    private CurrencyExchangeServiceProxy currencyExchangeServiceProxy;
+
+    @Autowired
+    public CurrencyConversionController(CurrencyExchangeServiceProxy currencyExchangeServiceProxy){
+        this.currencyExchangeServiceProxy = currencyExchangeServiceProxy;
+    }
+
     @GetMapping("currency-conversion/from/{from}/to/{to}/quantity/{quantity}")
     public CurrencyConversionBean convertCurrency(@PathVariable String from, @PathVariable String to, @PathVariable BigDecimal quantity){
-        Map<String,String> uriVariables = new HashMap<>();
-        uriVariables.put("from",from);
-        uriVariables.put("to",to);
-        ResponseEntity<CurrencyConversionBean> responseEntity = new RestTemplate().getForEntity("http://localhost:8000/currency-exchange/from/{from}/to/{to}"
-                                                                                                ,CurrencyConversionBean.class,uriVariables);
-        CurrencyConversionBean response = responseEntity.getBody();
-        return new CurrencyConversionBean(from,to,response.getConversionMultiple(),quantity,quantity.multiply(response.getConversionMultiple()),response.getPort());
+//        Map<String,String> uriVariables = new HashMap<>();
+//        uriVariables.put("from",from);
+//        uriVariables.put("to",to);
+//        ResponseEntity<CurrencyConversionBean> responseEntity = new RestTemplate().getForEntity("http://localhost:8000/currency-exchange/from/{from}/to/{to}"
+//                                                                                                ,CurrencyConversionBean.class,uriVariables);
+//        CurrencyConversionBean response = responseEntity.getBody();
+//        return new CurrencyConversionBean(from,to,response.getConversionMultiple(),quantity,quantity.multiply(response.getConversionMultiple()),response.getPort());
+          CurrencyConversionBean currencyConversionBean = currencyExchangeServiceProxy.retrieveExchangeValue(from, to);
+        return new CurrencyConversionBean(from,to,currencyConversionBean.getConversionMultiple(),quantity,quantity.multiply(currencyConversionBean.getConversionMultiple()),currencyConversionBean.getPort());
 
     }
 }
